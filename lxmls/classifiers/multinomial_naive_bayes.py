@@ -42,8 +42,15 @@ class MultinomialNaiveBayes(lc.LinearClassifier):
         # ----------
         # Solution to Exercise 1
 
-        raise NotImplementedError("Complete Exercise 1")
+        # Prior for i is the fraction of documents of class i
+        y_flat = y.reshape((-1,))
+        prior = np.bincount(y_flat, minlength=n_classes) / n_docs 
 
+        # Likelihood
+        for i_class in range(n_classes):
+            numerator_class_i = x[y_flat == i_class].sum(axis=0)
+            likelihood[:, i_class] = numerator_class_i / numerator_class_i.sum()
+        
         # End solution to Exercise 1
         # ----------
 
