@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from lxmls.deep_learning.mlp import MLP
-
+from torch.nn.functional import log_softmax, sigmoid
 
 def cast_float(variable):
     return Variable(torch.from_numpy(variable).float(), requires_grad=True)
@@ -42,11 +42,18 @@ class PytorchMLP(MLP):
 
         # Input
         tilde_z = input
-
+        
         # ----------
         # Solution to Exercise 4
 
-        raise NotImplementedError("Implement Exercise 4")
+        for i, (w, b) in enumerate(self.parameters):
+            tilde_z = torch.einsum('ij,kj->ki', w, tilde_z) + b
+            if i == len(self.parameters) - 1:
+                tilde_z = log_softmax(tilde_z)
+            else:
+                tilde_z = sigmoid(tilde_z)
+        # last tilde_z is already the log-softmax
+        log_tilde_z = tilde_z 
 
         # End of solution to Exercise 4
         # ----------

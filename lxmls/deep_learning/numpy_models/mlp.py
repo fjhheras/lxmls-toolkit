@@ -85,7 +85,7 @@ class NumpyMLP(MLP):
         log_prob_y, layer_inputs = self.log_forward(input)
         prob_y = np.exp(log_prob_y)
 
-        num_examples, num_clases = prob_y.shape
+        num_examples, num_classes = prob_y.shape
         num_hidden_layers = len(self.parameters) - 1
 
         # For each layer in reverse store the backpropagated error, then compute
@@ -94,9 +94,37 @@ class NumpyMLP(MLP):
 
         # ----------
         # Solution to Exercise 2
-
-        raise NotImplementedError("Implement Exercise 2")
         
+        # Backpropagate through the last non-linearity
+        error = (index2onehot(output, num_classes) - prob_y)
+        errors.append(error)
+
+        num_hidden_layers = len(self.parameters) - 1
+        
+        # Backpropagate error through each layer
+        for n in reversed(range(num_hidden_layers)):
+            # Linear part
+            # W^T * error
+            weight = self.parameters[n+1][0]
+            error = np.einsum('ji,kj->ki', weight, error)
+            # Sigmoid layer 
+            error *= layer_inputs[n+1] * (1-layer_inputs[n+1])
+            # Store
+            errors.append(error)
+
+        # Reverse errors
+        errors = errors[::-1]
+
+        # Compute gradients from errors
+        gradients = []
+        for n in range(num_hidden_layers + 1):
+            # errors (ex, dim_out)
+            # layer_inputs (ex, dim_in)
+            # weight_gradient (dim_out, dim_in)
+            weight_gradient = -np.einsum('ik,ij->kj', errors[n], layer_inputs[n]) / num_examples
+            bias_gradient = -np.sum(errors[n], axis=0, keepdims=True) / num_examples
+            gradients.append([weight_gradient, bias_gradient])
+
         # End of solution to Exercise 2
         # ----------
 
